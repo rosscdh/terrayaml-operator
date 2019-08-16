@@ -2,7 +2,10 @@ import os
 import json
 import yaml
 import gnupg
+import random
+import string
 import emails
+import jinja2
 import datetime
 import tempfile
 import namegenerator
@@ -78,6 +81,17 @@ EMAIL_DATA = dict(
     error=dict(subject='Error your infra could not be provisioned', message=ERROR_MESSAGE),
 )
 
+def random_password(value=None, length:int=15) -> str:
+    letters = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters) for i in range(length))
+
+def random_name(value:str='') -> str:
+    if value:
+        return f"{value}-{namegenerator.gen()}"
+    else:
+        return f"{namegenerator.gen()}"
+
+
 def lookup_keys(emails:list) -> tuple:
     for email in emails:
         try:
@@ -94,6 +108,7 @@ def send_email(to:tuple, message_type:str, attachment:str, mail_from:tuple=('Inf
     filename = f"terraform-{message_type}-output.txt.asc"
 
     to_emails, recipient_keys = zip(*to)
+
     encrypted_ascii_data = gpg.encrypt(attachment,
                                        recipient_keys,
                                        always_trust=True)
@@ -132,22 +147,38 @@ def terraform() -> tuple:
     response = stdout if not stderr else stderr
     return response, return_code
 
-def random_name(type:str) -> str:
-    return f"{type}-{namegenerator.gen()}"
-
 
 #
 # User input YAML
 #
-provision = yaml.load(Path('provision.yaml').read_bytes(), Loader=yaml.FullLoader)
+env = jinja2.Environment()
+env.filters['random_password'] = random_password
+env.filters['random_name'] = random_name
 
+
+template = T(template_text=Path('provision.yaml').read_text(),
+            environment=env).render(**{
+                'ctx': {
+                    'ENVIRONMENT': ENVIRONMENT,
+                    'APPLICATION': APPLICATION,
+                    'PROFILE': PROFILE,
+                    'REGION': REGION,
+                    'TEAM': TEAM,
+                }
+})
+
+provision = yaml.load(template, Loader=yaml.FullLoader)
+print(provision)
 #
 # Extract the notify component
 #
 notify = provision.pop('notify')
 if notify:
     # tuple of email, key
-    recipients = get_recipients_from_pgp(recipient_emails=[i for i in notify.get('email', [])])
+    recipient_emails = notify.get('email', [])
+    # append out infra provisioner email
+    recipient_emails.append('infraprovisioner@mindcurv.com')
+    recipients = get_recipients_from_pgp(recipient_emails=[i for i in recipient_emails])
 
 #
 # Parse the yaml
@@ -158,7 +189,7 @@ for provider in provision:
         #print(f"----- output for resource: {resource} -----")
         for item in data.get('items', []):
             api = TF_YAML_MAP.get(resource)
-            item_name = item.pop('name', random_name(type=resource))
+            item_name = item.pop('name', random_name(value=resource))
             ts.add(
                 api(item_name, **item)
             )
@@ -168,14 +199,6 @@ Path('main.tf.json').write_text(data)
 
 tf_response, tf_code = terraform()
 
-# with open('tf_response.log', 'w') as f:
-#     f.write(tf_response)
-
-# with tempfile.TemporaryFile(mode='w+b') as file:
-#     file.write(bytes(tf_response.encode('ascii')))
-#     file.seek(0)
 send_email(to=recipients,
            attachment=tf_response,
            message_type='success' if tf_code != 1 else 'error')
-
-# print(data)

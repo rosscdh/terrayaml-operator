@@ -3,12 +3,12 @@ aws:
     items:
       - acl: private
         acceleration_status: Enabled
-      - name: random
+      - bucket: {{ '' | random_name }}
         acl: public-read
   rds:
     version: 2.2
     items:
-      - cluster_identifier: aurora-cluster-demo
+      - cluster_identifier: {{ 'aurora-cluster-demo'|upper }}-{{ ctx.ENVIRONMENT|upper }}
         engine: aurora-postgresql
         availability_zones: ["eu-central-1a", "eu-central-2a"]
         database_name: mydb
