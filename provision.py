@@ -1,3 +1,4 @@
+import os
 import json
 import yaml
 import gnupg
@@ -18,14 +19,20 @@ import terrascript.aws.r as aws
 # gpg --export -a C6F2B16E > my_public_key.asc
 # gpg --dearmor the-asc-file.asc covert asc to pgp
 
-ENVIRONMENT = 'testing'
-APPLICATION = 'wurkflow'
-PROFILE = 'VI-NWOT-TESTING'
-REGION  = 'eu-central-1'
-TEAM    = 'POC'
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'testing')
+APPLICATION = os.getenv('APPLICATION', 'wurkflow')
+PROFILE = os.getenv('PROFILE', 'VI-NWOT-TESTING')
+REGION  = os.getenv('REGION', 'eu-central-1')
+TEAM    = os.getenv('TEAM', 'POC')
 
-REMOTE_STATE_S3_BUCKET = 'tmde2-testing-terraform-state'
-ROOT_PROFILE = 'VI-NWOT-TESTING'
+SMTP_SERVER = os.getenv('SMTP_SERVER', 'localhost')
+SMTP_PORT = os.getenv('SMTP_PORT', 1025)
+SMTP_SSL = int(os.getenv('SMTP_SSL', 0))
+SMTP_USERNAME = os.getenv('SMTP_USERNAME', None)
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', None)
+
+REMOTE_STATE_S3_BUCKET = os.getenv('REMOTE_STATE_S3_BUCKET', 'tmde2-testing-terraform-state')
+ROOT_PROFILE = os.getenv('ROOT_PROFILE', 'VI-NWOT-TESTING')
 
 ptf = python_terraform.Terraform()
 gpg = gnupg.GPG(gnupghome='./gpghome')
@@ -107,7 +114,7 @@ def send_email(to:tuple, message_type:str, attachment:str, mail_from:tuple=('Inf
                     'stderr': encrypted_ascii_data.stderr,
                     'to': to
                 },
-                smtp={'host':'localhost', 'port': 1025, 'ssl': False})
+                smtp={'host': SMTP_SERVER, 'port': SMTP_PORT, 'ssl': SMTP_SSL, 'user': SMTP_USERNAME, 'password': SMTP_PASSWORD})
 
 def get_recipients_from_pgp(recipient_emails:list) -> list:
     recipient_key_ids = []
@@ -132,8 +139,7 @@ def random_name(type:str) -> str:
 #
 # User input YAML
 #
-with open('provision.yaml', 'rb') as f:
-    provision = yaml.load(f, Loader=yaml.FullLoader)
+provision = yaml.load(Path('provision.yaml').read_bytes(), Loader=yaml.FullLoader)
 
 #
 # Extract the notify component
@@ -158,8 +164,7 @@ for provider in provision:
             )
 
 data = ts.dump()
-with open('main.tf.json', 'w') as f:
-    f.write(data)
+Path('main.tf.json').write_text(data)
 
 tf_response, tf_code = terraform()
 

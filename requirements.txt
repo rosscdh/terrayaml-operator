@@ -1,0 +1,7 @@
+pyyaml
+terrascript
+namegenerator
+emails
+jinja2
+python-terraform
+python-gnupg
