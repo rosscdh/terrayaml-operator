@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pip = "==18.0"
+pyyaml = "*"
+terrascript = "*"
+namegenerator = "*"
+emails = "*"
+"jinja2" = "*"
+python-terraform = "*"
+padding = "*"
+python-gnupg = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"

@@ -1,0 +1,8 @@
+gpghome
+.terraform
+.vscode
+*.asc
+*.gpg
+main.tf.json
+Pipfile.lock
+tf_response.log
