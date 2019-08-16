@@ -96,7 +96,7 @@ def send_email(to:tuple, message_type:str, attachment:str, mail_from:tuple=('Inf
     subject = EMAIL_DATA.get(message_type).get('subject')
     body = EMAIL_DATA.get(message_type).get('message')
 
-    message = emails.html(html=T(body),
+    message = emails.html(text=T(body),
                           subject=T(subject),
                           mail_from=MAIL_FROM)
     
@@ -120,7 +120,7 @@ def get_recipients_from_pgp(recipient_emails:list) -> list:
 def terraform() -> tuple:
     return_code, stdout, stderr = ptf.init()
 
-    return_code, stdout, stderr = ptf.plan(refresh=True)
+    return_code, stdout, stderr = ptf.plan(refresh=True, out='plan')
     # return_code, stdout, stderr = ptf.apply()
     response = stdout if not stderr else stderr
     return response, return_code

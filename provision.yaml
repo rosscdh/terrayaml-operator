@@ -5,16 +5,16 @@ aws:
         acceleration_status: Enabled
       - name: random
         acl: public-read
-  # rds:
-  #   version: 2.2
-  #   items:
-  #     - cluster_identifier: aurora-cluster-demo
-  #       engine: aurora-postgresql
-  #       availability_zones: ["eu-central-1a", "eu-central-2a"]
-  #       database_name: mydb
-  #       # master_username: foo
-  #       # master_password: bar
-  #       backup_retention_period: 5
+  rds:
+    version: 2.2
+    items:
+      - cluster_identifier: aurora-cluster-demo
+        engine: aurora-postgresql
+        availability_zones: ["eu-central-1a", "eu-central-2a"]
+        database_name: mydb
+        # master_username: foo
+        # master_password: bar
+        backup_retention_period: 5
   #       preferred_backup_window: 07:00-09:00"
 notify:
   email:
