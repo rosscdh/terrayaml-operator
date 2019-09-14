@@ -15,6 +15,8 @@ BUILD_DATE:=$$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 all: build
 
+mailcatcher:
+	docker run --rm  -p 1025:1025 -p 1080:1080  schickling/mailcatcher
 
 build:
 	docker build -t ${LATEST} -t ${REGISTRY}/${LATEST} \

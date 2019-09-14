@@ -4,6 +4,11 @@ gpghome
 .vscode
 *.asc
 *.gpg
+camel/runs/*
+!camel/runs/.gitkeep
+camel/camel.egg-info/*
+camel/gnupghome/*
+camel/camel/__pycache__/*
 main.tf.json
 Pipfile.lock
 tf_response.log
