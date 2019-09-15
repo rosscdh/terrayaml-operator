@@ -7,6 +7,8 @@ metadata:
   application: wurkflow
   #statefile_region: eu-west-1
 spec:
+  apply: false
+  # planId: ""
   terrayaml: |
     aws:
       s3:

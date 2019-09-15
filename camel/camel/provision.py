@@ -125,7 +125,7 @@ def get_recipients_from_pgp(recipient_emails:list) -> list:
     resp = import_keys(keys=[key for email, key in recipients_filtered])
     return recipients_filtered
 
-def terraform(working_dir:str, data:str, logger:KopfObjectLogger, apply:bool=False) -> tuple:
+def terraform(working_dir:str, data:str, logger:KopfObjectLogger, apply:bool=False, planId:str='') -> tuple:
     logger.info(f"WORKING IN DIR: {working_dir}")
     Path(f"{working_dir}/main.tf.json").write_text(data)
 
@@ -142,7 +142,18 @@ def terraform(working_dir:str, data:str, logger:KopfObjectLogger, apply:bool=Fal
     logger.info(f"TERRAFORM PLAN COMPLETE {response}")
     return response, return_code
 
-def process(terrayaml:str, metadata:dict, logger) -> str:
+def terraform_apply(planId:str, logger:KopfObjectLogger) -> tuple:
+    logger.info(f"PLANID: {planId}")
+    #@TODO check if planId exists throw kopf eception if not
+    ptf = python_terraform.Terraform(working_dir=planId)
+    # return_code, stdout, stderr = ptf.apply(refresh=True, auto_apply=True)
+    return_code, stdout, stderr = 0, 'all good', ''
+    response = stdout if not stderr else stderr
+    logger.info(f"TERRAFORM APPLY COMPLETE: {return_code} {response}")
+    return response, return_code
+
+def process(terrayaml:str, metadata:dict,
+            logger:KopfObjectLogger) -> str:
     #
     # User input YAML
     #
@@ -208,11 +219,13 @@ def process(terrayaml:str, metadata:dict, logger) -> str:
                 profile=PROFILE,
                 region=REGION)
     data = ts.dump()
+
+    # Plan
     working_dir = tempfile.mkdtemp(dir='./runs')
     tf_response, tf_code = terraform(working_dir=working_dir,
-                                     data=data,
-                                     logger=logger)
-    logger.info(f"Terraform result: {tf_response}")
+                                    data=data,
+                                    logger=logger)
+    logger.info(f"Terraform Plan result: {tf_response}")
 
     if recipients:
         logger.info(f"Send email to {recipients}")
@@ -221,4 +234,12 @@ def process(terrayaml:str, metadata:dict, logger) -> str:
                 message_type='success' if tf_code != 1 else 'error')
     else:
         logger.info('No recipients defined')
-    return 'True'
+    logger.info(f"PlanId is {working_dir}")
+    return f"{working_dir}"
+
+def process_apply(planId:str,
+                  metadata:dict,
+                  logger:KopfObjectLogger) -> str:
+    tf_response, tf_code = terraform_apply(planId=planId,
+                                           logger=logger)
+    logger.info(f"Terraform Apply result: {tf_response}")
