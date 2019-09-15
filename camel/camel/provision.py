@@ -8,6 +8,7 @@ import emails
 import jinja2
 import datetime
 import tempfile
+import kubernetes
 import namegenerator
 import python_terraform
 from pathlib import Path
@@ -222,6 +223,14 @@ def process(terrayaml:str, metadata:dict,
 
     # Plan
     working_dir = tempfile.mkdtemp(dir='./runs')
+    crd_api = kubernetes.client.CustomObjectsApi()
+    selfLink = metadata.get('selfLink').split('/')
+    # update with planId
+    crd_api.patch_namespaced_custom_object(group=selfLink[2], version=selfLink[3],
+                                           name=selfLink[7],
+                                           namespace=selfLink[5], plural=selfLink[6],
+                                           body={"spec": {"planId": working_dir}})
+
     tf_response, tf_code = terraform(working_dir=working_dir,
                                     data=data,
                                     logger=logger)

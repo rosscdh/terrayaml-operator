@@ -6,8 +6,6 @@ from provision import process, process_apply
 @kopf.on.create('mindcurv.com', 'v1beta1', 'terrayaml')
 async def create_fn(body, meta, new, diff, old, logger, **kwargs):
     terrayaml = new.get('spec', {}).get('terrayaml')
-    apply = new.get('spec', {}).get('apply', False)
-    planId = new.get('spec', {}).get('planId', None)
     process(terrayaml=terrayaml, metadata=meta,
             logger=logger)
 
