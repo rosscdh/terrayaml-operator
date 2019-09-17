@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "camel"
+name = "terrayaml"
 version = "0.0.1"
-description = "Camel - Ship of the desert, YAML to Terraform"
+description = "terrayaml - Ship of the desert, YAML to Terraform"
 authors = ["Ross Crawford-d'Heureuse <ross.crawford@mindcurv.com>"]
 
 [tool.poetry.dependencies]

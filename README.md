@@ -1,11 +1,11 @@
-# Camel - Ship of the seas
+# TerraYaml - Ship of the seas
 
 A simple CRD to handle terraform operations for developers via a simple yaml file
 that maps 1 to 1 to the terraform resource documentation
 
 ```sh
 # Start the server in dev mode (will deploy using docker container)
-kopf run camel/handler.py --verbose --dev
+kopf run terrayaml/handler.py --verbose --dev
 
 # setup the CRD
 kc apply -f k8s/crd-terrayaml.yaml

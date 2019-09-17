@@ -1,8 +1,14 @@
-gpghome
+plan
+gnupghome
 .terraform
 .vscode
 *.asc
 *.gpg
+terrayaml/runs/*
+!terrayaml/runs/.gitkeep
+terrayaml/terrayaml.egg-info/*
+terrayaml/gnupghome/*
+terrayaml/terrayaml/__pycache__/*
 main.tf.json
 Pipfile.lock
 tf_response.log

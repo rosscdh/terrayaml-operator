@@ -31,7 +31,7 @@ SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', None)
 REMOTE_STATE_S3_BUCKET = os.getenv('REMOTE_STATE_S3_BUCKET', 'rbmh-mit-cc2meadow-shared-tf-remote-state')
 ROOT_PROFILE = os.getenv('ROOT_PROFILE', 'RBMH-MIT-NONPROD')
 
-gpg = gnupg.GPG(gnupghome='/Users/ross/Desktop/provisioner/camel/gnupghome')
+gpg = gnupg.GPG(gnupghome='/Users/ross/Desktop/provisioner/terrayaml/gnupghome')
 
 
 TF_YAML_MAP = {
@@ -183,7 +183,7 @@ def process(terrayaml:str, metadata:dict,
     ).backend(
         "s3",
         bucket=REMOTE_STATE_S3_BUCKET,
-        key=f"k8/camel-operator/{team}/{environment}/{application}-terraform.tfstate",
+        key=f"k8/terrayaml-operator/{team}/{environment}/{application}-terraform.tfstate",
         region=statefile_region,
         profile=ROOT_PROFILE
     )
