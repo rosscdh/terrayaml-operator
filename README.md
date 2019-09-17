@@ -5,8 +5,12 @@ that maps 1 to 1 to the terraform resource documentation
 
 ```sh
 cd terrayaml
+# DEV
 # Start the server in dev mode (will deploy using docker container)
 kopf run terrayaml/handler.py --verbose --dev
+# OR
+# install the operator, but you ened to setup the envs
+kc apply -f k8s/crd-terrayaml.yaml
 
 # setup the CRD
 kc apply -f k8s/crd-terrayaml.yaml
