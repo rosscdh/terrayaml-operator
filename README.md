@@ -10,7 +10,7 @@ cd terrayaml
 kopf run terrayaml/handler.py --verbose --dev
 # OR
 # install the operator, but you ened to setup the envs
-kc apply -f k8s/crd-terrayaml.yaml
+kustomize build k8s/operator | kubectl apply -f -
 
 # setup the CRD
 kc apply -f k8s/crd-terrayaml.yaml

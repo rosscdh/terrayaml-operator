@@ -1,0 +1,10 @@
+namespace: kube-system
+
+resources:
+- manifest.yaml
+
+secretGenerator:
+- name: terrayaml-secrets
+  envs:
+  - env.txt
+  type: Opaque

@@ -15,7 +15,7 @@ from pathlib import Path
 from emails.template import JinjaTemplate as T
 from kopf.engines.logging import ObjectLogger as KopfObjectLogger
 
-from terrascript import Terrascript, Terraform, Provider
+from terrascript import Terrascript, Terraform, Provider, Output
 import terrascript.aws.r as aws
 
 
@@ -173,6 +173,7 @@ def process(terrayaml:str, metadata:dict,
     #
     meta                = provision.pop('meta', {})
     team                = meta.get('team', 'oss')
+    profile             = meta.get('profile', PROFILE)
     environment         = meta.get('environment', 'testing')
     application         = meta.get('application', 'wurkflow')
     statefile_region    = meta.get('statefile_region', 'eu-west-1')
@@ -217,7 +218,7 @@ def process(terrayaml:str, metadata:dict,
     # Add a provider (+= syntax)
     ts += Provider('aws',
                 skip_metadata_api_check=True,
-                profile=PROFILE,
+                profile=profile,
                 region=REGION)
     data = ts.dump()
 

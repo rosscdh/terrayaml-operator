@@ -18,6 +18,9 @@ spec:
       containers:
       - name: terrayaml-operator
         image: rosscdh/terrayaml-operator
+        envFrom:
+        - secretRef:
+            name: terrayaml-secrets
 ---
 apiVersion: v1
 kind: ServiceAccount
