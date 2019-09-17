@@ -1,6 +1,6 @@
 .PHONY: all build push
 
-NAME     := rosscdh/infra-provisioner
+NAME     := rosscdh/terrayaml
 REGISTRY := 'hub.docker.com'
 TAG      := $$(git log -1 --pretty=%h)
 VERSION  := ${NAME}:${TAG}

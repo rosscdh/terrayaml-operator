@@ -1,0 +1,9 @@
+pyyaml
+-e git+https://github.com/mjuenema/python-terrascript.git@develop-0.7#egg=python-terrascript
+namegenerator
+emails
+jinja2
+python-terraform
+python-gnupg
+kopf
+kubernetes
