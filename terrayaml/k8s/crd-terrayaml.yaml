@@ -31,6 +31,9 @@ spec:
             apply:
               type: boolean
               #default: false
+            destroyOnDelete:
+              type: boolean
+              #default: false
             planId:
               type: string
             terrayaml:
