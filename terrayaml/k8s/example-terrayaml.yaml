@@ -8,6 +8,7 @@ metadata:
   #statefile_region: eu-west-1
 spec:
   apply: false
+  destroyOnDelete: false
   # planId: ""
   terrayaml: |
     aws:
@@ -15,8 +16,12 @@ spec:
         items:
           - acl: private
             acceleration_status: Enabled
-          - bucket: {{ '' | random_name }}
+          - bucket: my-bucket
             acl: public-read
+            outputs:
+              - name: my-bucket-domain_name
+                value: bucket_domain_name
+                description: my buckets domain name
       rds:
         version: 2.2
         items:

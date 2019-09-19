@@ -1,13 +1,30 @@
 import kopf
 import asyncio
 from pathlib import Path
-from provision import process, process_apply
+from provision import process, process_apply, process_destroy
 
 @kopf.on.create('mindcurv.com', 'v1beta1', 'terrayaml')
 async def create_fn(body, meta, new, diff, old, logger, **kwargs):
     terrayaml = new.get('spec', {}).get('terrayaml')
-    process(terrayaml=terrayaml, metadata=meta,
+    process(terrayaml=terrayaml,
+            metadata=meta,
             logger=logger)
+
+@kopf.on.delete('mindcurv.com', 'v1beta1', 'terrayaml')
+async def delete_fn(body, spec, meta, new, diff, old, logger, **kwargs):
+    terrayaml = spec.get('terrayaml')
+    destroyOnDelete = spec.get('destroyOnDelete', False)
+    planId = spec.get('planId')
+    name = meta.get('name')
+    team = meta.get('team')
+    env = meta.get('environment')
+    app = meta.get('application')
+    if destroyOnDelete is True and planId:
+        kopf.info(body, reason='destroyOnDelete is True', message=f"planid: {planId} name: {name} team: {team} environment: {env} app: {app}")
+        process_destroy(planId=planId,
+                        logger=logger)
+    else:
+        kopf.info(body, reason='destroyOnDelete is False', message=f"planid: {planId} name: {name} team: {team} environment: {env} app: {app}")
 
 # update functions to handle planId set and then apply being patched
 @kopf.on.field('mindcurv.com', 'v1beta1', 'terrayaml', field='spec.planId')
@@ -30,7 +47,6 @@ def apply(old, new, meta, logger, spec, **kwargs):
     if new is True and new != old:
         if spec.get('planId'):
             process_apply(planId=spec.get('planId'),
-                          metadata=meta,
                           logger=logger)
         else:
             raise kopf.PermanentError(f"planId is not present.")

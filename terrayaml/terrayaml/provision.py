@@ -19,6 +19,8 @@ from terrascript import Terrascript, Terraform, Provider, Output
 import terrascript.aws.r as aws
 
 
+GPG_HOME  = os.getenv('GPG_HOME', '/Users/ross/Desktop/provisioner/terrayaml/gnupghome')
+
 PROFILE = os.getenv('PROFILE', 'RBMH-MIT-NONPROD')
 REGION  = os.getenv('REGION', 'eu-west-1')
 
@@ -30,9 +32,6 @@ SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', None)
 
 REMOTE_STATE_S3_BUCKET = os.getenv('REMOTE_STATE_S3_BUCKET', 'rbmh-mit-cc2meadow-shared-tf-remote-state')
 ROOT_PROFILE = os.getenv('ROOT_PROFILE', 'RBMH-MIT-NONPROD')
-
-gpg = gnupg.GPG(gnupghome='/Users/ross/Desktop/provisioner/terrayaml/gnupghome')
-
 
 TF_YAML_MAP = {
     's3': aws.s3_bucket,
@@ -76,7 +75,7 @@ def random_name(value:str='') -> str:
         return f"{namegenerator.gen()}"
 
 
-def lookup_keys(emails:list) -> tuple:
+def lookup_keys(gpg, emails:list) -> tuple:
     for email in emails:
         try:
             yield email, gpg.search_keys(email, 'pgp.uni-mainz.de')[0]
@@ -84,7 +83,7 @@ def lookup_keys(emails:list) -> tuple:
             yield email, None
 
 
-def import_keys(keys:list):
+def import_keys(gpg, keys:list):
         return gpg.recv_keys('pgp.uni-mainz.de', *keys)
 
 
@@ -92,6 +91,8 @@ def send_email(to:tuple,
                message_type:str,
                attachment:str,
                mail_from:tuple=('Infra Provisioner', 'ross.crawford@mindcurv.com')):
+    gpg = gnupg.GPG(gnupghome=GPG_HOME)
+
     filename = f"terraform-{message_type}-output.txt.asc"
 
     to_emails, recipient_keys = zip(*to)
@@ -119,11 +120,13 @@ def send_email(to:tuple,
                 smtp={'host': SMTP_SERVER, 'port': SMTP_PORT, 'ssl': SMTP_SSL, 'user': SMTP_USERNAME, 'password': SMTP_PASSWORD})
 
 def get_recipients_from_pgp(recipient_emails:list) -> list:
+    gpg = gnupg.GPG(gnupghome=GPG_HOME)
+
     recipient_key_ids = []
 
-    recipients = [(email, key) for email, key in lookup_keys(emails=recipient_emails)]
+    recipients = [(email, key) for email, key in lookup_keys(gpg=gpg, emails=recipient_emails)]
     recipients_filtered = [(email, recipient.get('keyid')) for email, recipient in recipients if recipient]
-    resp = import_keys(keys=[key for email, key in recipients_filtered])
+    resp = import_keys(gpg=gpg, keys=[key for email, key in recipients_filtered])
     return recipients_filtered
 
 def terraform(working_dir:str, data:str, logger:KopfObjectLogger, apply:bool=False, planId:str='') -> tuple:
@@ -153,7 +156,18 @@ def terraform_apply(planId:str, logger:KopfObjectLogger) -> tuple:
     logger.info(f"TERRAFORM APPLY COMPLETE: {return_code} {response}")
     return response, return_code
 
-def process(terrayaml:str, metadata:dict,
+def terraform_destroy(planId:str, logger:KopfObjectLogger) -> tuple:
+    logger.info(f"PLANID: {planId}")
+    #@TODO check if planId exists throw kopf eception if not
+    ptf = python_terraform.Terraform(working_dir=planId)
+    # return_code, stdout, stderr = ptf.destroy(refresh=True, auto_apply=True)
+    return_code, stdout, stderr = 0, 'all destroyed', ''
+    response = stdout if not stderr else stderr
+    logger.info(f"TERRAFORM DESTROY COMPLETE: {return_code} {response}")
+    return response, return_code
+
+def process(terrayaml:str,
+            metadata:dict,
             logger:KopfObjectLogger) -> str:
     #
     # User input YAML
@@ -210,10 +224,20 @@ def process(terrayaml:str, metadata:dict,
             #print(f"----- output for resource: {resource} -----")
             for item in data.get('items', []):
                 api = TF_YAML_MAP.get(resource)
+                outputs = item.pop('outputs', [])
                 item_name = item.pop('name', random_name(value=resource))
+                tf_resource = api(item_name, **item)
                 ts.add(
-                    api(item_name, **item)
+                    tf_resource
                 )
+
+                # handle terraform outputs
+                for opt in outputs:
+                    assert getattr(tf_resource, opt.get('value')), f"{tf_resource} has no attribute {opt.get('value')}"
+                    ts.add(
+                        Output(opt.get('name'),
+                            value=getattr(tf_resource, opt.get('value')))
+                    )
 
     # Add a provider (+= syntax)
     ts += Provider('aws',
@@ -227,9 +251,12 @@ def process(terrayaml:str, metadata:dict,
     crd_api = kubernetes.client.CustomObjectsApi()
     selfLink = metadata.get('selfLink').split('/')
     # update with planId
-    crd_api.patch_namespaced_custom_object(group=selfLink[2], version=selfLink[3],
+    logger.info(f"planId: {working_dir}")
+    crd_api.patch_namespaced_custom_object(group=selfLink[2],
+                                           version=selfLink[3],
                                            name=selfLink[7],
-                                           namespace=selfLink[5], plural=selfLink[6],
+                                           namespace=selfLink[5],
+                                           plural=selfLink[6],
                                            body={"spec": {"planId": working_dir}})
 
     tf_response, tf_code = terraform(working_dir=working_dir,
@@ -248,8 +275,13 @@ def process(terrayaml:str, metadata:dict,
     return f"{working_dir}"
 
 def process_apply(planId:str,
-                  metadata:dict,
                   logger:KopfObjectLogger) -> str:
     tf_response, tf_code = terraform_apply(planId=planId,
                                            logger=logger)
     logger.info(f"Terraform Apply result: {tf_response}")
+
+def process_destroy(planId:str,
+                    logger:KopfObjectLogger) -> str:
+    tf_response, tf_code = terraform_destroy(planId=planId,
+                                             logger=logger)
+    logger.info(reason='Destroy complete', message=f"Terraform Destroy result: {tf_response}")
