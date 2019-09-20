@@ -21,7 +21,7 @@ import terrascript.aws.r as aws
 
 GPG_HOME  = os.getenv('GPG_HOME', '/Users/ross/Desktop/provisioner/terrayaml/gnupghome')
 
-PROFILE = os.getenv('PROFILE', 'RBMH-MIT-NONPROD')
+PROFILE = os.getenv('PROFILE', 'MC-MEETUPS')
 REGION  = os.getenv('REGION', 'eu-west-1')
 
 SMTP_SERVER = os.getenv('SMTP_SERVER', 'localhost')
@@ -30,8 +30,8 @@ SMTP_SSL = int(os.getenv('SMTP_SSL', 0))
 SMTP_USERNAME = os.getenv('SMTP_USERNAME', None)
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', None)
 
-REMOTE_STATE_S3_BUCKET = os.getenv('REMOTE_STATE_S3_BUCKET', 'rbmh-mit-cc2meadow-shared-tf-remote-state')
-ROOT_PROFILE = os.getenv('ROOT_PROFILE', 'RBMH-MIT-NONPROD')
+REMOTE_STATE_S3_BUCKET = os.getenv('REMOTE_STATE_S3_BUCKET', 'rbmh-mit-cc2meadow-deleteme-rosscdh-terrayaml')
+ROOT_PROFILE = os.getenv('ROOT_PROFILE', 'MC-MEETUPS')
 
 TF_YAML_MAP = {
     's3': aws.s3_bucket,
@@ -139,9 +139,7 @@ def terraform(working_dir:str, data:str, logger:KopfObjectLogger, apply:bool=Fal
     logger.info('TERRAFORM INIT COMPLETE')
 
     return_code, stdout, stderr = ptf.plan(refresh=True, out='plan')
-    # import pdb;pdb.set_trace()
-    # return_code, stdout, stderr = ptf.apply()
-    # logger.info('TERRAFORM APPLY COMPLETE')
+
     response = stdout if not stderr else stderr
     logger.info(f"TERRAFORM PLAN COMPLETE {response}")
     return response, return_code
@@ -150,8 +148,10 @@ def terraform_apply(planId:str, logger:KopfObjectLogger) -> tuple:
     logger.info(f"PLANID: {planId}")
     #@TODO check if planId exists throw kopf eception if not
     ptf = python_terraform.Terraform(working_dir=planId)
-    # return_code, stdout, stderr = ptf.apply(refresh=True, auto_apply=True)
-    return_code, stdout, stderr = 0, 'all good', ''
+    return_code, stdout, stderr = ptf.apply(dir_or_plan=f"{planId}/plan",
+                                            refresh=True,
+                                            auto_approve=True)
+    # return_code, stdout, stderr = 0, 'all good', ''
     response = stdout if not stderr else stderr
     logger.info(f"TERRAFORM APPLY COMPLETE: {return_code} {response}")
     return response, return_code
@@ -160,8 +160,10 @@ def terraform_destroy(planId:str, logger:KopfObjectLogger) -> tuple:
     logger.info(f"PLANID: {planId}")
     #@TODO check if planId exists throw kopf eception if not
     ptf = python_terraform.Terraform(working_dir=planId)
-    # return_code, stdout, stderr = ptf.destroy(refresh=True, auto_apply=True)
-    return_code, stdout, stderr = 0, 'all destroyed', ''
+    return_code, stdout, stderr = ptf.destroy(dir_or_plan=f"{planId}/plan",
+                                              refresh=True,
+                                              auto_approve=True)
+    # return_code, stdout, stderr = 0, 'all destroyed', ''
     response = stdout if not stderr else stderr
     logger.info(f"TERRAFORM DESTROY COMPLETE: {return_code} {response}")
     return response, return_code
