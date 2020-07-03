@@ -34,7 +34,7 @@ metadata:
   name: terrayaml-role-cluster
 rules:
   # Framework: knowing which other operators are running (i.e. peering).
-  - apiGroups: [mindcurv.com]
+  - apiGroups: [thicc.tech]
     resources: [clusterkopfpeerings]
     verbs: [list, watch, patch, get]
   - apiGroups: [apiextensions.k8s.io]
@@ -42,7 +42,7 @@ rules:
     verbs: [list, get]
 
   # Application: read-only access for watching cluster-wide.
-  - apiGroups: [mindcurv.com]
+  - apiGroups: [thicc.tech]
     resources: [terrayaml]
     verbs: [list, watch]
 ---
@@ -54,7 +54,7 @@ metadata:
 rules:
 
   # Framework: knowing which other operators are running (i.e. peering).
-  - apiGroups: [mindcurv.com]
+  - apiGroups: [thicc.tech]
     resources: [kopfpeerings]
     verbs: [list, watch, patch, get]
 
@@ -67,7 +67,7 @@ rules:
     verbs: [create]
 
   # Application: watching & handling for the custom resource we declare.
-  - apiGroups: [mindcurv.com]
+  - apiGroups: [thicc.tech]
     resources: [terrayaml]
     verbs: [list, watch, patch]
 

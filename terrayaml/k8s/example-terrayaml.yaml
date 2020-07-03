@@ -1,4 +1,4 @@
-apiVersion: mindcurv.com/v1beta1
+apiVersion: thicc.tech/v1beta1
 kind: TerraYaml
 metadata:
   name: my-ty-example
@@ -35,5 +35,4 @@ spec:
       # #       preferred_backup_window: 07:00-09:00"
     notify:
       email:
-        - ross.crawford@mindcurv.com
-        - stefan.schweer@mindcurv.com
+        - ross.crawford@thicc.tech

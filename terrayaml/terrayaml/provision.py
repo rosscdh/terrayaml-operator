@@ -38,7 +38,7 @@ TF_YAML_MAP = {
     'rds': aws.rds_cluster,
 }
 
-MAIL_FROM = ('Infra Provisioner', 'infraprovisioner@mindcurv.com')
+MAIL_FROM = ('Infra Provisioner', 'infraprovisioner@thicc.tech')
 
 SUCCESS_MESSAGE = """
 Hi there, your infra has been planned/applied
@@ -90,7 +90,7 @@ def import_keys(gpg, keys:list):
 def send_email(to:tuple,
                message_type:str,
                attachment:str,
-               mail_from:tuple=('Infra Provisioner', 'ross.crawford@mindcurv.com')):
+               mail_from:tuple=('Infra Provisioner', 'ross.crawford@thicc.tech')):
     gpg = gnupg.GPG(gnupghome=GPG_HOME)
 
     filename = f"terraform-{message_type}-output.txt.asc"
@@ -213,7 +213,7 @@ def process(terrayaml:str,
         # tuple of email, key
         recipient_emails = notify.get('email', [])
         # append out infra provisioner email
-        recipient_emails.append('infraprovisioner@mindcurv.com')
+        recipient_emails.append('infraprovisioner@thicc.tech')
         recipients = get_recipients_from_pgp(recipient_emails=recipient_emails)
         logger.info(f"notify these emails: {recipient_emails}")
 

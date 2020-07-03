@@ -2,7 +2,7 @@
 name = "terrayaml"
 version = "0.0.1"
 description = "terrayaml - Ship of the desert, YAML to Terraform"
-authors = ["Ross Crawford-d'Heureuse <ross.crawford@mindcurv.com>"]
+authors = ["Ross Crawford-d'Heureuse <ross.crawford@thicc.tech>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
